@@ -2,15 +2,28 @@ import { useState } from 'react'
 import { useSyncProviders } from '../hooks/useSyncProviders'
 import { ethers, Filter, FilterByBlockHash, TransactionResponse } from 'ethers'
 import TransactionsHistory from './TransactionsHistory'
+import SendETHModal from './SendETHModal'
 
 type Account = {
   id: string
   name: string
   balance: number,
-  transactions: TransactionResponse[]
+  transactions: (TransactionResponse | null)[]
 }
 
-async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account: Account) {
+// This is method is special to my case where I tried to find the block number of a transaction where I transferred some ETH from one account to another
+async function getReferenceBlock(provider: ethers.BrowserProvider) {
+  const tx = await provider.getTransaction("0x447f0fc221a0c8403421210db75a3852bd5cda1290fadbd1a5fcb302b93f37d1")
+  if (!tx) {
+    console.error('Transaction not found')
+  }
+  const blockNumber = tx?.blockNumber || 0
+  const block = await provider.getBlock(blockNumber) || { number: 0 }
+  console.log('block:', block)
+  return block
+}
+
+async function getTransactions(providerWithInfo: EIP6963ProviderDetail, account: Account) {
   const provider = new ethers.BrowserProvider(providerWithInfo.provider)
 
   // Get the latest block number
@@ -18,12 +31,7 @@ async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account
   console.log('Latest block number:', latestBlock)
 
 
-  const tx = await provider.getTransaction("0x447f0fc221a0c8403421210db75a3852bd5cda1290fadbd1a5fcb302b93f37d1")
-  if (!tx) {
-    console.error('Transaction not found')
-  }
-  const block = await provider.getBlock(tx?.blockNumber) || { number: 0 }
-  console.log('block:', block)
+  const block = await getReferenceBlock(provider)
 
   // Get all transactions for the user's address
   const filter: Filter | FilterByBlockHash = {
@@ -38,10 +46,11 @@ async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account
     ]
   }
 
+  // Get the logs that match the filter
   const logs = await provider.getLogs(filter)
   console.log('logs:', logs)
 
-  // Process and format the transaction data
+  // For each log, get the transaction associated with it
   const transactionsOfAccount = await Promise.all(
     logs.map(async (log) => await provider.getTransaction(log.transactionHash))
   )
@@ -54,9 +63,27 @@ async function getBalance(accId: string, providerWithInfo: EIP6963ProviderDetail
   return ethers.formatEther(result)
 }
 
+const sendTransaction = async (from: string, to: string, amount: string, selectedWallet: EIP6963ProviderDetail) => {
+  try {
+    const provider = new ethers.BrowserProvider(selectedWallet.provider);
+    const signer = await provider.getSigner(from);
+    const tx = await signer.sendTransaction({
+      to,
+      value: ethers.parseEther(amount),
+    });
+    await tx.wait();
+    // Optionally update account balances and transaction history here
+  } catch (error) {
+    console.error('Error sending transaction:', error);
+  }
+};
+
 export const DiscoverWalletProviders = () => {
   const [selectedWallet, setSelectedWallet] = useState<EIP6963ProviderDetail>()
   const [accounts, setAccounts] = useState<Map<string, Account>>(new Map())
+  const [isOpen, setIsOpen] = useState(false);
+
+
   const providers = useSyncProviders()
 
   const handleConnect = async (providerWithInfo: EIP6963ProviderDetail) => {
@@ -90,8 +117,12 @@ export const DiscoverWalletProviders = () => {
     // Create an ethers provider using the MetaMask provider
     await Promise.all(Array.from(accounts.values()).map(async (acc) => {
       console.log('Loading transactions for account:', acc)
-      const transactionsOfAccount = await loadTransactions(providerWithInfo, acc)
-      accounts.get(acc.id).transactions = transactionsOfAccount
+      const transactionsOfAccount = await getTransactions(providerWithInfo, acc)
+      const account = accounts.get(acc.id)
+      if (account != null) {
+        account.transactions = transactionsOfAccount
+        account.transactions = transactionsOfAccount
+      }
     }))
 
     // fill in the balances
@@ -107,8 +138,13 @@ export const DiscoverWalletProviders = () => {
     setAccounts(new Map(accounts));
   }
 
+  const handleSendETHDialogSubmit = async (from: string, to: string, amount: string) => {
+    await sendTransaction(from, to, amount, selectedWallet)
+  }
+
   return (
     <>
+
       <h2>Wallets Detected:</h2>
       <div>
         {
@@ -151,6 +187,10 @@ export const DiscoverWalletProviders = () => {
           )
         }
       </div>
+      <SendETHModal isOpen={isOpen} setIsOpen={setIsOpen} handleSendTransaction={handleSendETHDialogSubmit} accounts={accounts} onClose={() => setIsOpen(false)} />
+      {selectedWallet && <div>
+        <button onClick={() => setIsOpen(true)}>Send ETH</button>
+      </div>}
     </>
   )
 }
