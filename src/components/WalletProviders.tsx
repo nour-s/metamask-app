@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSyncProviders } from '../hooks/useSyncProviders'
 import TransactionsHistory from './TransactionsHistory'
 import SendETHModal from './SendETHModal'
-import { Account, getBalance, getTransactions, sendTransaction, switchToLineaSepoliaNetwork } from './ProviderOperations'
+import { Account, connectToMobileWallet, getBalance, getTransactions, sendTransaction, switchToLineaSepoliaNetwork } from './ProviderOperations'
 
 export const DiscoverWalletProviders = () => {
   const [selectedWallet, setSelectedWallet] = useState<EIP6963ProviderDetail>()
@@ -12,18 +12,33 @@ export const DiscoverWalletProviders = () => {
   const providers = useSyncProviders()
 
   const handleConnect = async (providerWithInfo: EIP6963ProviderDetail) => {
-    const accountIds: string[] | undefined =
+    const accountIds: string[] =
       await (
         providerWithInfo.provider
           .request({ method: 'eth_requestAccounts' })
           .catch(console.error)
-      ) as string[] | undefined;
+      ) as string[];
 
     if (!accounts) {
       throw new Error('No accounts found')
     }
     setSelectedWallet(providerWithInfo)
 
+    await initializeAccounts(accountIds, providerWithInfo)
+  }
+
+  const handleConnectToMobileWallet = async () => {
+    const inMobileDevice = window.navigator.maxTouchPoints > 2;
+    if (!inMobileDevice) {
+      alert('This button works on mobile devices only')
+      return
+    }
+    const [accountIds, provider] = await connectToMobileWallet()
+    setSelectedWallet(provider)
+    await initializeAccounts(accountIds, provider)
+  }
+
+  async function initializeAccounts(accountIds: string[], providerWithInfo: EIP6963ProviderDetail) {
     accountIds?.forEach((id: string) => {
       setAccounts(accounts.set(id, {
         id: id,
@@ -72,6 +87,7 @@ export const DiscoverWalletProviders = () => {
 
   return (
     <>
+      <button onClick={handleConnectToMobileWallet}>Connect to mobile</button>
       <h2>Wallets Detected:</h2>
       <div>
         {
@@ -91,8 +107,8 @@ export const DiscoverWalletProviders = () => {
       {selectedWallet &&
         <div>
           <div style={{ border: "1px solid #ccc", padding: "10px", borderRadius: "5px", display: "flex", alignItems: "center" }}>
-            <img src={selectedWallet.info.icon} alt={selectedWallet.info.name} style={{ marginRight: "10px" }} />
-            <div style={{ fontSize: "16px", fontWeight: "bold" }}>{selectedWallet.info.name}</div>
+            <img src={selectedWallet.info?.icon} alt={selectedWallet.info?.name} style={{ marginRight: "10px" }} />
+            <div style={{ fontSize: "16px", fontWeight: "bold" }}>{selectedWallet.info?.name}</div>
           </div>
         </div>
       }
