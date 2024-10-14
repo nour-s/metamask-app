@@ -1,50 +1,42 @@
-# React + TypeScript + Vite
+# Connect to Wallet Example
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is an example app that demonstrates how to connect to a wallet using EIP6963. It detects all the wallets extensions installed in the browser and allows the user to connect to one of them.
 
-Currently, two official plugins are available:
+When selecting a wallet, the app will display all the accounts available in the wallet. It uses ethers 6 to interact with the wallet. It can get the account id, balance, and transactions list.
+If Linea Sepolia chain is not selected, it will ask the wallet provider to switch to it, if the chain doesn't exists it will ask the wallet to add it prompting the user to approve.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+At the bottom there is Send ETH that shows a form to send ETH to another account. It uses the wallet to sign the transaction and send it to the network.
 
-## Expanding the ESLint configuration
+The Connect To Mobile Wallet button works only when the app is running in a mobile browser. It will open the wallet app installed in the device to connect to the app. Once connected, the app will display the account id, balance, and transactions list same as the browser verion.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Prerequisites
 
-- Configure the top-level `parserOptions` property like this:
+- Node.js (>= 14.x)
+- Yarn 2 (Berry)
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Getting Started
+
+### Installation
+
+1. **Clone the repository:**
+
+    ```sh
+    git clone <repository-url>
+    cd metamask-app
+    ```
+
+2. **Install dependencies:**
+
+    ```sh
+    yarn install
+    ```
+
+### Running the App
+
+To start the development server, run:
+
+```sh
+yarn dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+This will start the Vite development server and you can view the app in your browser at http://localhost:5173 (double check the console output for the actual port).
