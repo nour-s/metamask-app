@@ -2,6 +2,8 @@ import { useState } from 'react';
 import './App.css';
 import { useSDK } from "@metamask/sdk-react";
 
+import { ethers } from 'ethers';
+
 type Account = {
   name: string
   balance: number,
@@ -31,15 +33,15 @@ export const App = () => {
 
       // get balances of accounts
       await Promise.all(Array.from(accounts.keys()).map(async (accId: string) => {
-        const result = await provider?.request<string>({ method: 'eth_getBalance', params: [accId, 'latest'] });
-        let balance = 0;
-        if (result) {
-          balance = parseInt(result, 16) / 1e18;
-        }
+        const balance = await getBalance(accId);
+        const transactions = await getTransactions(accId);
+
         const acc: Account = accounts.get(accId) || { name: accId, balance: 0, transactions: [] };
         if (acc) {
           acc.balance = balance;
+          acc.transactions = transactions;
         }
+
         accounts.set(accId, acc);
         setAccounts(new Map(accounts));
         console.log("updated balance..", { accId, balance });
@@ -49,6 +51,37 @@ export const App = () => {
       console.warn("failed to connect..", err);
     }
   };
+
+  const getTransactions = async (accId: string) => {
+
+  };
+  // get transactions of an account
+  const getTransactionsUsingEtherscanProvider = async (accId: string) => {
+    let transactions;
+    try {
+      const etherscanProvider = new ethers.EtherscanProvider('linea-sepolia', 'X27GZD1QJQY7JPE297B4BGXMEUZVHH4ZKW');
+      const history = await etherscanProvider.fetch(accId, {
+        address: window.ethereum?.selectedAddress,
+        action: 'txlist',
+      });
+
+      // transactions = await provider?.request({ method: 'eth_getTransactionByHash', params: [accId] });
+    } catch (err) {
+      console.warn("failed to getTransactions..", err);
+    }
+    return transactions;
+  };
+
+  async function getBalance(accId: string) {
+    const result = await provider?.request<string>({ method: 'eth_getBalance', params: [accId, 'latest'] });
+    let balance = 0;
+    if (result) {
+      balance = parseInt(result, 16) / 1e18;
+    }
+    return balance;
+  }
+
+
 
   return (
     <div className="App">

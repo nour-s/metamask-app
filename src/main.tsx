@@ -7,14 +7,13 @@ import { MetaMaskProvider } from "@metamask/sdk-react";
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MetaMaskProvider
-      debug={false}
+      debug={true}
       sdkOptions={{
         dappMetadata: {
-          name: "Example React Dapp",
+          name: "MetaMask POC",
           url: window.location.href,
         },
         infuraAPIKey: import.meta.env.VITE_INFURA_API_KEY,
-        // Other options.
       }}>
       <App />
     </MetaMaskProvider>
