@@ -8,7 +8,7 @@ type Account = {
     transactions: (TransactionResponse | null)[]
 }
 
-const lineSepolia = {
+const lineaSepolia = {
     chainId: 59141,
     chainIdHex: '0xe705',
     chainName: 'Linea Sepolia',
@@ -92,18 +92,18 @@ const sendTransaction = async (from: string, to: string, amount: string, selecte
 async function switchToLineaSepoliaNetwork(providerDetail: EIP6963ProviderDetail) {
     // Check if we're on the Linea Sepolia network
     const curChainId = await providerDetail.provider.request({ method: 'eth_chainId' });
-    if (curChainId !== lineSepolia.chainIdHex) { // Linea Sepolia chainId
+    if (curChainId !== lineaSepolia.chainIdHex) { // Linea Sepolia chainId
         try {
             await providerDetail.provider.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{ chainId: lineSepolia.chainIdHex }],
+                params: [{ chainId: lineaSepolia.chainIdHex }],
             })
         }
         catch (error) {
             if (error.code === 4902) {
                 providerDetail.provider.request({
                     method: 'wallet_addEthereumChain',
-                    params: [lineSepolia]
+                    params: [lineaSepolia]
                 }).catch(console.error);
             } else {
                 console.error(error);
