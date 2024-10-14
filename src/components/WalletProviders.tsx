@@ -10,6 +10,41 @@ type Account = {
   transactions: TransactionResponse[]
 }
 
+async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account: Account) {
+  const provider = new ethers.BrowserProvider(providerWithInfo.provider)
+
+  // Get the latest block number
+  const latestBlock = await provider.getBlockNumber()
+  console.log('Latest block number:', latestBlock)
+
+
+  const tx = await provider.getTransaction("0x447f0fc221a0c8403421210db75a3852bd5cda1290fadbd1a5fcb302b93f37d1")
+  const block = await provider.getBlock(tx.blockNumber)
+  console.log('block:', block)
+
+  // Get all transactions for the user's address
+  const filter: Filter | FilterByBlockHash = {
+    fromBlock: block.number - 1000, // Math.max(0, latestBlock - 10000),
+    toBlock: block.number,
+    topics: [
+      ethers.id("Transfer(address,address,uint256)"),
+      [
+        ethers.zeroPadValue(account.id, 32),
+        ethers.ZeroHash
+      ]
+    ]
+  }
+
+  const logs = await provider.getLogs(filter)
+  console.log('logs:', logs)
+
+  // Process and format the transaction data
+  const transactionsOfAccount = await Promise.all(
+    logs.map(async (log) => await provider.getTransaction(log.transactionHash))
+  )
+  return transactionsOfAccount
+}
+
 export const DiscoverWalletProviders = () => {
   const [selectedWallet, setSelectedWallet] = useState<EIP6963ProviderDetail>()
   const [accounts, setAccounts] = useState<Map<string, Account>>(new Map())
@@ -46,49 +81,15 @@ export const DiscoverWalletProviders = () => {
     // Create an ethers provider using the MetaMask provider
     await Promise.all(Array.from(accounts.values()).map(async (acc) => {
       console.log('Loading transactions for account:', acc)
-      await loadTransactions(providerWithInfo, acc)
+      const transactionsOfAccount = await loadTransactions(providerWithInfo, acc)
+      accounts.get(acc.id).transactions = transactionsOfAccount
     }))
 
     console.log('Done filling in transactions')
     setAccounts(new Map(accounts));
   }
 
-  async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account: Account) {
-    const provider = new ethers.BrowserProvider(providerWithInfo.provider)
 
-    // Get the latest block number
-    const latestBlock = await provider.getBlockNumber()
-    console.log('Latest block number:', latestBlock)
-
-
-    const tx = await provider.getTransaction("0x447f0fc221a0c8403421210db75a3852bd5cda1290fadbd1a5fcb302b93f37d1")
-    const block = await provider.getBlock(tx.blockNumber)
-    console.log('block:', block)
-
-    // Get all transactions for the user's address
-    const filter: Filter | FilterByBlockHash = {
-      fromBlock: block.number - 1000, // Math.max(0, latestBlock - 10000),
-      toBlock: block.number,
-      topics: [
-        ethers.id("Transfer(address,address,uint256)"),
-        [
-          ethers.zeroPadValue(account.id, 32),
-          ethers.ZeroHash
-        ]
-      ]
-    }
-
-    console.log('Filter:', filter)
-    const logs = await provider.getLogs(filter)
-    console.log('logs:', logs)
-
-    // Process and format the transaction data
-    const transactionsOfAccount = await Promise.all(
-      logs.map(async (log) => await provider.getTransaction(log.transactionHash))
-    )
-
-    accounts.get(account.id).transactions = transactionsOfAccount
-  }
 
   return (
     <>
