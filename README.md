@@ -35,7 +35,7 @@ The Connect To Mobile Wallet button works only when the app is running in a mobi
     yarn install
     ```
 
-### Running the App
+### Running the App on local browser
 
 To start the development server, run:
 
@@ -69,3 +69,30 @@ ngrok http 5173
 ### Debugging the App on Mobile
 
 For debugging the web app on the phone, I used the remote debugging feature of Chrome (check the [documentation](https://developer.chrome.com/docs/devtools/remote-debugging) for more information) which allows you to use same DevTools features from your computer to inspect the web app running on the phone (pretty cool to be honest 🙃)
+
+### What is missing
+* The transactions history is not accurate, I tried using lots of ways to filter the logs as the documentation suggested, but it seems it returns irrelevant logs that are not even related to the current account.
+
+```
+    // Get all transactions for the user's address
+    const filter: Filter | FilterByBlockHash = {
+        fromBlock: 'earliest',
+        toBlock: 'latest',
+        topics: [
+            ethers.id("Transfer(address,address,uint256)"),
+            [
+                ethers.zeroPadValue(account.id, 32),
+                ethers.ZeroHash
+            ]
+        ]
+    }
+
+    // Get the logs that match the filter
+    const logs = await provider.getLogs(filter)
+```
+
+* The custom dialog to connect to wallet.
+* Sending ETH dialog flow seems to be broken on the phone, when you submit the form it shows the wallet app and disappears, and if you manually open the wallet app it shows the transaction signing dialog waiting for confirmation.
+* I tried using types everywhere, however some libraries don't have types.
+* I used metamask sdk only for mobile connection, it also doens't return the EIP6963ProviderDetail object and I had to fill the name of the wallet manually which means if you use a different wallet app it will still show metamask name and logo.
+* Error handling could be better.
