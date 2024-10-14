@@ -78,6 +78,23 @@ const sendTransaction = async (from: string, to: string, amount: string, selecte
   }
 };
 
+// switch to the Linea Sepolia network in MetaMask
+async function SwitchToLineaSepoliaNetwork(providerDetail: EIP6963ProviderDetail) {
+  // Check if we're on the Linea Sepolia network
+  const chainId = await providerDetail.provider.request({ method: 'eth_chainId' });
+  if (chainId !== '0xe705') { // Linea Sepolia chainId
+    try {
+      await providerDetail.provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0xe705' }],
+      })
+    }
+    catch (error) {
+      console.error(error)
+    };
+  }
+}
+
 export const DiscoverWalletProviders = () => {
   const [selectedWallet, setSelectedWallet] = useState<EIP6963ProviderDetail>()
   const [accounts, setAccounts] = useState<Map<string, Account>>(new Map())
@@ -108,11 +125,7 @@ export const DiscoverWalletProviders = () => {
       }));
     });
 
-    // Check if we're on the Linea Sampolia network
-    const chainId = await providerWithInfo.provider.request({ method: 'eth_chainId' });
-    if (chainId !== '0xe705') { // Linea Sampolia chainId
-      throw new Error('Please switch to the Linea Sepolia network in MetaMask');
-    }
+    await SwitchToLineaSepoliaNetwork(providerWithInfo)
 
     // Create an ethers provider using the MetaMask provider
     await Promise.all(Array.from(accounts.values()).map(async (acc) => {
@@ -144,7 +157,6 @@ export const DiscoverWalletProviders = () => {
 
   return (
     <>
-
       <h2>Wallets Detected:</h2>
       <div>
         {
