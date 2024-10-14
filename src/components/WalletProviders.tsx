@@ -45,6 +45,12 @@ async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account
   return transactionsOfAccount
 }
 
+async function getBalance(accId: string, providerWithInfo: EIP6963ProviderDetail) {
+  const provider = new ethers.BrowserProvider(providerWithInfo.provider)
+  const result = await provider.getBalance(accId)
+  return ethers.formatEther(result)
+}
+
 export const DiscoverWalletProviders = () => {
   const [selectedWallet, setSelectedWallet] = useState<EIP6963ProviderDetail>()
   const [accounts, setAccounts] = useState<Map<string, Account>>(new Map())
@@ -84,6 +90,12 @@ export const DiscoverWalletProviders = () => {
       const transactionsOfAccount = await loadTransactions(providerWithInfo, acc)
       accounts.get(acc.id).transactions = transactionsOfAccount
     }))
+
+    // fill in the balances
+    await Promise.all(Array.from(accounts.values()).map(async (acc) => {
+      const balance = await getBalance(acc.id, providerWithInfo)
+      accounts.get(acc.id).balance = parseFloat(balance)
+    }));
 
     console.log('Done filling in transactions')
     setAccounts(new Map(accounts));
