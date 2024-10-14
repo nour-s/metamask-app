@@ -9,6 +9,9 @@ At the bottom there is Send ETH that shows a form to send ETH to another account
 
 The Connect To Mobile Wallet button works only when the app is running in a mobile browser. It will open the wallet app installed in the device to connect to the app. Once connected, the app will display the account id, balance, and transactions list same as the browser verion.
 
+![image](https://github.com/user-attachments/assets/cd6caf23-a406-42f7-8b20-a2783192d646)
+
+
 ## Prerequisites
 
 - Node.js (>= 14.x)
