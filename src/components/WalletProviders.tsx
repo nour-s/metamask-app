@@ -4,8 +4,6 @@ import TransactionsHistory from './TransactionsHistory'
 import SendETHModal from './SendETHModal'
 import { Account, getBalance, getTransactions, sendTransaction, switchToLineaSepoliaNetwork } from './ProviderOperations'
 
-
-
 export const DiscoverWalletProviders = () => {
   const [selectedWallet, setSelectedWallet] = useState<EIP6963ProviderDetail>()
   const [accounts, setAccounts] = useState<Map<string, Account>>(new Map())

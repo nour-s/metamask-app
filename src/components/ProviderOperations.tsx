@@ -7,6 +7,19 @@ type Account = {
     transactions: (TransactionResponse | null)[]
 }
 
+const lineSepolia = {
+    chainId: 59141,
+    chainIdHex: '0xe705',
+    chainName: 'Linea Sepolia',
+    nativeCurrency: {
+        name: 'ETH',
+        symbol: 'ETH',
+        decimals: 18
+    },
+    rpcUrls: ['https://rpc.sepolia.linea.build'],
+    blockExplorerUrls: ['https://sepolia.lineascan.build']
+};
+
 // This is method is special to my case where I tried to find the block number of a transaction where I transferred some ETH from one account to another
 async function getReferenceBlock(provider: ethers.BrowserProvider) {
     const tx = await provider.getTransaction("0x447f0fc221a0c8403421210db75a3852bd5cda1290fadbd1a5fcb302b93f37d1")
@@ -77,16 +90,23 @@ const sendTransaction = async (from: string, to: string, amount: string, selecte
 // switch to the Linea Sepolia network in MetaMask
 async function switchToLineaSepoliaNetwork(providerDetail: EIP6963ProviderDetail) {
     // Check if we're on the Linea Sepolia network
-    const chainId = await providerDetail.provider.request({ method: 'eth_chainId' });
-    if (chainId !== '0xe705') { // Linea Sepolia chainId
+    const curChainId = await providerDetail.provider.request({ method: 'eth_chainId' });
+    if (curChainId !== lineSepolia.chainIdHex) { // Linea Sepolia chainId
         try {
             await providerDetail.provider.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0xe705' }],
+                params: [{ chainId: lineSepolia.chainIdHex }],
             })
         }
         catch (error) {
-            console.error(error)
+            if (error.code === 4902) {
+                providerDetail.provider.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [lineSepolia]
+                }).catch(console.error);
+            } else {
+                console.error(error);
+            }
         };
     }
 }
