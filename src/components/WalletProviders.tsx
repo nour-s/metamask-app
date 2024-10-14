@@ -19,7 +19,10 @@ async function loadTransactions(providerWithInfo: EIP6963ProviderDetail, account
 
 
   const tx = await provider.getTransaction("0x447f0fc221a0c8403421210db75a3852bd5cda1290fadbd1a5fcb302b93f37d1")
-  const block = await provider.getBlock(tx.blockNumber)
+  if (!tx) {
+    console.error('Transaction not found')
+  }
+  const block = await provider.getBlock(tx?.blockNumber) || { number: 0 }
   console.log('block:', block)
 
   // Get all transactions for the user's address
@@ -94,14 +97,15 @@ export const DiscoverWalletProviders = () => {
     // fill in the balances
     await Promise.all(Array.from(accounts.values()).map(async (acc) => {
       const balance = await getBalance(acc.id, providerWithInfo)
-      accounts.get(acc.id).balance = parseFloat(balance)
+      const account = accounts.get(acc.id);
+      if (account) {
+        account.balance = parseFloat(balance);
+      }
     }));
 
     console.log('Done filling in transactions')
     setAccounts(new Map(accounts));
   }
-
-
 
   return (
     <>
@@ -134,14 +138,15 @@ export const DiscoverWalletProviders = () => {
       <div>
         {
           Array.from(accounts.keys()).map((id) =>
-            <div key={id}>
-              <h3>Account: {id}</h3>
-              <h4>Balance: {accounts.get(id)?.balance}</h4>
-
-              <div >
-                <h2>Transaction History:</h2>
+            <div key={id} style={{ backgroundColor: "#333", color: "#fff", padding: "15px", borderRadius: "8px", marginBottom: "10px" }}>
+              <div style={{ borderBottom: "1px solid #555", paddingBottom: "5px" }}>
+                <h3>Id: {id}</h3>
+                <h4>Balance: {accounts.get(id)?.balance} ETH</h4>
+              </div>
+              <div style={{ marginTop: "10px" }}>
+                <h4>Transaction History:</h4>
                 <TransactionsHistory transactions={accounts.get(id)?.transactions} />
-              </div >
+              </div>
             </div>
           )
         }
