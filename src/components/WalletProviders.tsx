@@ -35,6 +35,13 @@ export const DiscoverWalletProviders = () => {
 
     await switchToLineaSepoliaNetwork(providerWithInfo)
 
+    providerWithInfo.provider.on("chainChanged", handleChainChanged)
+
+    function handleChainChanged() {
+      // We recommend reloading the page, unless you must do otherwise.
+      window.location.reload()
+    }
+
     // Create an ethers provider using the MetaMask provider
     await Promise.all(Array.from(accounts.values()).map(async (acc) => {
       console.log('Loading transactions for account:', acc)
