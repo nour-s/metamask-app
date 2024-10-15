@@ -96,3 +96,17 @@ For debugging the web app on the phone, I used the remote debugging feature of C
 * I tried using types everywhere, however some libraries don't have types.
 * I used metamask sdk only for mobile connection, it also doens't return the EIP6963ProviderDetail object and I had to fill the name of the wallet manually which means if you use a different wallet app it will still show metamask name and logo.
 * Error handling could be better.
+  
+### Demo
+Here are recordings of me testing the app on desktop and mobile browser:
+
+
+#### Basic functionality
+https://github.com/user-attachments/assets/92561179-85cf-4ad4-ac8a-8ec1cf8451a8
+
+#### Using Coinbase wallet
+
+https://github.com/user-attachments/assets/1744b536-3ecc-42d3-a930-35e8ccafbd3c
+
+#### On mobile browser
+https://github.com/user-attachments/assets/26095bd9-abeb-4a28-88e3-6dbd84b83dd0
